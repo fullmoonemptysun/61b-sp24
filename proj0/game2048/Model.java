@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author moon
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -137,7 +137,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        for(int row = 0; row < b.size(); row++){
+            for(int col = 0; col < b.size(); col++){
+                if(b.tile(col, row) == null){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,9 +153,16 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        for(int row = 0; row < b.size(); row++){
+            for(int col = 0; col < b.size(); col++){
+                if((b.tile(col, row) != null) && (b.tile(col, row).value() == MAX_PIECE)){
+                    return true;
+                }
+            }
+        }
         return false;
     }
+
 
     /**
      * Returns true if there are any valid moves on the board.
@@ -158,9 +171,75 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if(emptySpaceExists(b) || sameValueNeighborExists(b)){
+            return true;
+        }
         return false;
     }
+
+    /**
+     * Helper function for atLeastOneMoveExists
+     * Returns true if the coordinates are valid for a tile
+     */
+    public static boolean validCoordinate(Board b, int row, int col){
+        if(row >= b.size() || row < 0 || col >= b.size() || col < 0){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Helper function for atLeastOneMoveExists
+     * Returns true if any of the non-diagonal neighbor tiles have the same value.
+     */
+    public static boolean sameValueNeighborExists(Board b) {
+        for (int row = 0; row < b.size(); row++) {
+            for (int col = 0; col < b.size(); col++) {
+                if(sameValueinRow(row, col, b) || sameValueinCol(row, col, b)){
+                    return true;
+                }
+
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Helper function for sameValueNeighbor
+     * Returns true if a tile on the left or right has the same value
+     */
+    public static boolean sameValueinRow(int row, int col, Board b){
+        for(int x = -1; x <= 1; x++){
+            //test if valid coordinate, not self, and not empty
+            if(validCoordinate(b, (row + x), col) && x != 0 && b.tile(col, row+x) != null){
+                if(b.tile(col, row).value() == b.tile(col, row+x).value()){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Helper function for sameValueNeighbor
+     * Returns true if a tile on the top or bottom has the same value
+     */
+    public static boolean sameValueinCol(int row, int col, Board b){
+        for(int y = -1; y <= 1; y++){
+            if(validCoordinate(b, (row), col+y) && y != 0 && b.tile(col+y, row) != null){
+                if(b.tile(col, row).value() == b.tile(col+y, row).value()){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
+
+
 
 
     @Override
