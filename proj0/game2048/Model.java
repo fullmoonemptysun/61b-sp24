@@ -110,15 +110,99 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
+        board.setViewingPerspective(side);
+
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+
+        //keep track of which cells have seen a merge per tilt.
+        boolean [][] mergedCells = {
+                {false, false, false, false},
+                {false, false, false, false,},
+                {false, false, false, false,},
+                {false, false, false, false,}
+        };
+
+        //column and row value on the reoriented board.
+        int c;
+        int r;
+        for(c = board.size()-1; c >= 0; --c){
+            for(r = board.size()-1; r >= 0; --r){
+
+                Tile tStd = board.tile(c, r);
+                if(tStd == null){
+                    continue;
+                }
+
+                int nextMove = nextAvailableCell(c, r, tStd, board.size(), side, mergedCells);
+
+                //implement the move if nextMove is different from original position
+                if(nextMove != r){
+                    int nextCol = c;
+                    int nextRow = nextMove;
+                    boolean merge = board.move(nextCol, nextRow, tStd);
+                    if(merge){
+                        this.score += board.tile(nextCol, nextRow).value();
+                    }
+                    changed = true;
+
+                }
+
+
+            }
+        }
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
+
+        board.setViewingPerspective(Side.NORTH);
         return changed;
+    }
+
+
+
+    public int nextAvailableCell(int orientedC, int orientedR, Tile tile,  int size, Side s, boolean[][] arr){
+
+        int result = 0;
+
+        //if the tile is vertically at the end of the Side on the
+        // Reoriented board, return the same row.
+        if(orientedR >= size-1){
+            return orientedR;
+        }
+
+        //Iterate through the oriented column starting from next row until the end
+        for(int i = orientedR + 1; i < size; i++){
+
+            /*  return the values and not set the values for result because the column search is from down up
+               which can give us wrong results because the algorithm will keep searching for next cell in cells above.
+            */
+            if(board.tile(orientedC, i) != null && board.tile(orientedC, i).value() != tile.value()){
+                return i-1; //land before the tile
+            }
+
+            else if(board.tile(orientedC, i) != null && board.tile(orientedC, i).value() == tile.value()){
+                if(arr[i][orientedC]){
+                    return i-1; // land before the tile if the tile has been merged with in the same tilt.
+
+                }
+                else {
+                    arr[i][orientedC] = true;
+                    return  i; //Land on the tile
+                }
+            }
+
+            else{
+                result = size - 1; //land at the end of the board
+            }
+        }
+
+
+        return result;
+
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -212,8 +296,8 @@ public class Model extends Observable {
     public static boolean sameValueinRow(int row, int col, Board b){
         for(int x = -1; x <= 1; x++){
             //test if valid coordinate, not self, and not empty
-            if(validCoordinate(b, (row + x), col) && x != 0 && b.tile(col, row+x) != null){
-                if(b.tile(col, row).value() == b.tile(col, row+x).value()){
+            if(validCoordinate(b, (row + x), col) && x != 0 && b.tile(col, row+x) != null) {
+                if (b.tile(col, row).value() == b.tile(col, row + x).value()) {
                     return true;
                 }
             }
